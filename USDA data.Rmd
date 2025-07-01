@@ -1,0 +1,71 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(dplyr)
+library(ggplot2)
+
+```
+
+
+```{r}
+linked_data <- read.delim(gzfile("C:/Users/sthompson5/Documents/Meat Consumption/data/animal_products.csv.gz")) %>%  as_tibble() %>% select(-BEGIN_CODE:-END_CODE, -WEEK_ENDING:-LOAD_TIME )
+```
+
+```{r}
+pre_filtered <- linked_data %>% 
+    filter(SOURCE_DESC == "SURVEY",
+           UNIT_DESC == "HEAD",
+           AGG_LEVEL_DESC == "STATE",
+           DOMAIN_DESC == "TOTAL",
+           LOCATION_DESC != "NEW ENGLAND"
+           #STATISTICCAT_DESC == "PLACEMENTS" # placement works well for chickens but not other categories
+           ) %>%
+    mutate(STATISTICCAT_DESC = ifelse(grepl("CONDEMNED", STATISTICCAT_DESC, ignore.case = TRUE), "CONDEMNED", STATISTICCAT_DESC)) %>% 
+    select(-STATE_ANSI:-COUNTRY_NAME, -CV_., STATE_NAME) %>% 
+    mutate(VALUE = as.numeric(gsub(",", "", VALUE))) %>% 
+    filter(!is.na(VALUE)) %>% 
+    arrange(YEAR)
+```
+
+
+
+```{r}
+annual_chicken <- pre_filtered %>% 
+    filter(FREQ_DESC == "ANNUAL",
+           COMMODITY_DESC == "CHICKENS"
+           ) %>% 
+    group_by(YEAR, STATE_NAME, STATISTICCAT_DESC, UNIT_DESC) %>% 
+    summarise(VALUE = sum(VALUE)) %>% 
+    mutate(FREQ_DESC = "ANNUAL")
+
+monthly_chicken <- pre_filtered %>% 
+    filter(FREQ_DESC == "MONTHLY",
+           COMMODITY_DESC == "CHICKENS",
+           REFERENCE_PERIOD_DESC %in% toupper(month.abb)
+           ) %>% 
+    group_by(YEAR, STATE_NAME, STATISTICCAT_DESC, UNIT_DESC) %>% 
+    summarise(VALUE = sum(VALUE)) %>% 
+    mutate(FREQ_DESC = "MONTHLY")
+annual_monthly_chicken_comparison <- rbind(annual_chicken, monthly_chicken)
+
+```
+
+```{r}
+p <- annual_chicken %>% 
+    ggplot()+
+    geom_point(
+        aes(x = YEAR, 
+            y = VALUE, 
+            color = STATE_NAME,
+            text = paste0("Year: ",YEAR)
+            )
+    )
+ggplotly(p, tooltip = "text")
+```
+
+
+
+
