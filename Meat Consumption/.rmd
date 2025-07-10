@@ -1,0 +1,108 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(bslib)
+library(dplyr)
+library(ggplot2)
+library(ggExtra)
+library(DT)
+library(plotly)
+library(scales)
+library(qs)
+```
+
+
+```{r}
+# linked_data <- read.delim(gzfile("C:/Users/sthompson5/Documents/Meat Consumption/data/animal_products.csv.gz")) %>%  as_tibble() %>% select(-BEGIN_CODE:-END_CODE, -WEEK_ENDING:-LOAD_TIME )
+# 
+# state_lookup <- tibble(
+#     STATE_NAME = toupper(state.name),
+#     STATE_ABB = toupper(state.abb)
+# )
+
+```
+
+```{r}
+# pre_filtered <- linked_data %>% 
+#     filter(SOURCE_DESC == "SURVEY",
+#            UNIT_DESC == "HEAD",
+#            AGG_LEVEL_DESC == "STATE",
+#            DOMAIN_DESC == "TOTAL",
+#            LOCATION_DESC != "NEW ENGLAND"
+#            ) %>%
+#     mutate(STATISTICCAT_DESC = ifelse(grepl("CONDEMNED", STATISTICCAT_DESC, ignore.case = TRUE), "CONDEMNED", STATISTICCAT_DESC)) %>% 
+#     select(-STATE_ANSI:-COUNTRY_NAME, -CV_., STATE_NAME, -SOURCE_DESC, -AGG_LEVEL_DESC) %>% 
+#     mutate(VALUE = as.numeric(gsub(",", "", VALUE))) %>% 
+#     filter(!is.na(VALUE)) %>% 
+#     arrange(YEAR) %>% 
+#     left_join(state_lookup, by = "STATE_NAME")
+# print(object.size(pre_filtered), units = "auto")
+# 
+# 
+# qsave(pre_filtered, "Filtered_USDA_Data.qs")
+```
+
+
+
+```{r}
+pre_filtered <- qread("C:/Users/sthompson5/Documents/Meat Consumption/Filtered_USDA_Data.qs")
+
+
+all_chicken <- pre_filtered %>% 
+    filter(FREQ_DESC == "ANNUAL",
+           COMMODITY_DESC == "CHICKENS"
+           ) %>% 
+    group_by(YEAR, STATE_ABB, STATE_NAME, STATISTICCAT_DESC, UNIT_DESC) %>% 
+    summarise(VALUE = sum(VALUE)) %>% 
+    mutate(FREQ_DESC = "ANNUAL")
+
+```
+
+```{r}
+all_cattle <- pre_filtered %>% 
+    filter(FREQ_DESC == "ANNUAL",
+           COMMODITY_DESC == "CATTLE",
+           CLASS_DESC %in% c("HEIFERS", "CALVES", "BULLS","STEERS", "COWS")) %>% 
+    group_by(YEAR, STATE_ABB, STATE_NAME, STATISTICCAT_DESC, UNIT_DESC, CLASS_DESC, SHORT_DESC) %>% 
+    summarise(VALUE = sum(VALUE))
+all_cattle %>% sapply(unique)
+
+```
+
+```{r}
+test1 <- pre_filtered %>% 
+    filter(STATE_NAME %in% sort(unique(STATE_NAME))[10:20]) %>% 
+    filter(FREQ_DESC == "ANNUAL",
+           COMMODITY_DESC == "CATTLE",
+           CLASS_DESC == "CALVES",
+           SHORT_DESC == "CATTLE, CALVES, SLAUGHTER, COMMERCIAL - SLAUGHTERED, MEASURED IN HEAD"
+           ) %>% 
+    group_by(YEAR, STATE_NAME, STATISTICCAT_DESC, UNIT_DESC, CLASS_DESC, SHORT_DESC) %>% 
+    summarise(VALUE = sum(VALUE)) %>% 
+    arrange(STATE_NAME) 
+
+test2 <- pre_filtered %>% 
+    filter(STATE_NAME %in% sort(unique(STATE_NAME))[10:20]) %>% 
+    filter(FREQ_DESC == "ANNUAL",
+           COMMODITY_DESC == "CATTLE",
+           CLASS_DESC == "CALVES",
+           SHORT_DESC ==  "CATTLE, CALVES, SLAUGHTER, COMMERCIAL, FI - SLAUGHTERED, MEASURED IN HEAD"
+           ) %>% 
+    group_by(YEAR, STATE_NAME, STATISTICCAT_DESC, UNIT_DESC, CLASS_DESC, SHORT_DESC) %>% 
+    summarise(VALUE = sum(VALUE)) %>% 
+    arrange(STATE_NAME)
+
+
+ggplot()+
+    geom_point(data = test1, 
+               aes(x = YEAR,
+                   y = VALUE),
+               color = "red") +
+    geom_point(data = test2,
+               aes(x = YEAR,
+                   y = VALUE),
+               color = "blue")+
+    facet_wrap(~ STATE_NAME)
