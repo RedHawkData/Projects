@@ -1,0 +1,78 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+power_two <- function(n){
+  if(n == 1) return(1) 
+  return(2 * power_two(n-1))
+}
+
+```
+
+```{r}
+factorial <- function(x){
+  if(x == 1){1
+  } else(
+    x * factorial(x-1)
+  )
+}
+```
+
+```{r}
+even_indexes_sum <- function(x){
+    if (length(x)  < 2){
+        return(0)
+    }else{
+        print(x[2])
+        return(x[2] + even_indexes_sum(x[-(1:2)]))
+    }
+}
+```
+
+```{r}
+fib <- function(x){
+  if(x == 0){
+    return(0)
+  }
+  if(x == 1){
+    return(1)
+  }
+  else(
+    return(fib(x-1)+ fib(x-2))
+  )
+}
+```
+
+```{r}
+string_reverse <- function(string){
+  if(nchar(string) <= 1){
+    return(string)
+  }else{
+    rest <- substr(string, 2, nchar(string))
+
+    return(gsub(" ", "", paste(string_reverse(rest),substr(string,1,1))))
+  }
+}
+```
+
+```{r}
+sum_array <- function(vectr){
+  if(length(vectr) == 1){
+    return(vectr[1])
+  }else{
+    return(vectr[1] + sum_array(vectr[-1]))
+  }
+}
+```
+
+```{r}
+triangular <- function(n){
+  if (n == 1){
+    return(1)
+  }
+   return(n + triangular(n-1))
+}
+```
+
