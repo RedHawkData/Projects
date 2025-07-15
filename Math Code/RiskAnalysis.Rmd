@@ -1,0 +1,55 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyr)
+library(dplyr)
+```
+
+
+```{r}
+
+riskAttackProbability <- function(x, attackers = 3, defenders = 2){
+  
+attacksWon = 0
+attacksLost = 0
+
+  for (i in 1:x) {
+attackerList <- sort(floor(runif(attackers,1,7)), decreasing = TRUE)
+defenderList <- sort(floor(runif(defenders,1,7)), decreasing = TRUE)
+
+if(attackers < 3){
+  attackerList <- append(attackerList, c(0,0))
+}
+if(defenders < 2){
+  defenderList <- append(defenderList, c(0,0))
+}
+
+attackerWinsBoth <- (attackerList[1] > defenderList[1]) & (attackerList[2] > defenderList[2])
+attackerLosesBoth <- (attackerList[1] <= defenderList[1]) & (attackerList[2] <= defenderList[2] & attack)
+if(attackerWinsBoth == TRUE){
+    attacksWon = attacksWon + 1
+}
+if(attackerLosesBoth == TRUE){
+    attacksLost = attacksLost + 1
+      }
+  }
+
+winRatio <- attacksWon/x
+lostRatio <- attacksLost/x
+tieRatio <- 1- (winRatio+lostRatio)
+
+tibble(winRatio, lostRatio, tieRatio) %>% 
+  mutate(rationSums  = winRatio + lostRatio + tieRatio)
+}
+```
+
+
+```{r}
+attack(10000,3,1)
+attack(10000,3,2)
+```
+
+

@@ -1,0 +1,32 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r}
+library(tidyr)
+library(ggplot2)
+```
+
+
+
+```{r}
+x = seq(0, 100, by = .75)
+x
+y = as_tibble(sin((x*2*pi)/100))
+ggplot(y)+
+  geom_point(aes(x = 1:length(x), y = y))
+```
+
+
+creating the function for the data creation, whose variable is only the number of instances.
+```{r}
+dataCreation <- function(volume = 500, period = 50){
+  sin()
+  
+  
+  
+}
+```
+
