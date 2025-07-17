@@ -3,29 +3,36 @@ title: "R Notebook"
 output: html_notebook
 ---
 
-```{r}
-library(bslib)
-library(dplyr)
-library(ggplot2)
-library(ggExtra)
-library(DT)
-library(plotly)
-library(scales)
-library(qs)
+```{r setup-packages, message=FALSE, warning=FALSE}
+required_packages <- c("bslib", "dplyr", "ggplot2", "DT", "plotly", "scales", "qs", "here")
+
+install_if_missing <- function(pkg) {
+    if (!requireNamespace(pkg, quietly = TRUE)) {
+        install.packages(pkg)
+    }
+}
+
+
+invisible(lapply(required_packages, install_if_missing))
+invisible(lapply(required_packages, library, character.only = TRUE))
+
+
+data_link <- here("Meat Consumption", "Filtered_USDA_Data.qs")
+if (!file.exists(data_link)){
+    stop("Data file not found. Please make sure you're opening the project via the `.Rproj` file.")
+} 
+pre_filtered <- qread(data_link)
+
 ```
 
 
-```{r}
+```{r prefiltering}
 # linked_data <- read.delim(gzfile("C:/Users/sthompson5/Documents/Meat Consumption/data/animal_products.csv.gz")) %>%  as_tibble() %>% select(-BEGIN_CODE:-END_CODE, -WEEK_ENDING:-LOAD_TIME )
 # 
 # state_lookup <- tibble(
 #     STATE_NAME = toupper(state.name),
 #     STATE_ABB = toupper(state.abb)
 # )
-
-```
-
-```{r}
 # pre_filtered <- linked_data %>% 
 #     filter(SOURCE_DESC == "SURVEY",
 #            UNIT_DESC == "HEAD",
@@ -48,9 +55,6 @@ library(qs)
 
 
 ```{r}
-pre_filtered <- qread("C:/Users/sthompson5/Documents/Meat Consumption/Filtered_USDA_Data.qs")
-
-
 all_chicken <- pre_filtered %>% 
     filter(FREQ_DESC == "ANNUAL",
            COMMODITY_DESC == "CHICKENS"
