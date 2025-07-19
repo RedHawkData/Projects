@@ -238,8 +238,8 @@ server <- function(input, output, session){
                 color = STATISTICCAT_DESC,
                 text = paste0("Year: ",YEAR,
                               "<br>State: ", STATE_NAME,
-                              "<br>Value", comma(VALUE),
-                              "<br>Classification", STATISTICCAT_DESC)
+                              "<br>Value: ", comma(VALUE),
+                              "<br>Classification: ", STATISTICCAT_DESC)
             )
         ) +
         scale_color_manual(values = state_color)
