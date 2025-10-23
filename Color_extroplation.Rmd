@@ -1,0 +1,122 @@
+---
+title: "Color Gradient"
+output: html_document
+date: "2025-10-21"
+---
+```{r}
+library(grDevices)  # for col2rgb and rgb
+library(colorspace) # for HLS interpolation
+library(patchwork)  # for combining plots
+library(ggplot2)    # for visualization
+library(dplyr)      # for data minipulation 
+# 
+unique_preserve_order <- function(x) {
+  x[!duplicated(x)]
+}
+
+
+# RGB interpolation
+interpolate_hex_rgb <- function(hex_colors, n_intermediate = 3) {
+  result <- c()
+  n <- length(hex_colors)
+
+  
+  for(i in 1:(length(hex_colors))) {
+    col1 <- col2rgb(hex_colors[i]) / 255
+    col2 <- col2rgb(hex_colors[(i %% n) + 1]) / 255  # wrap around to first color
+    
+    # create sequence for each channel
+    r_seq <- seq(col1[1], col2[1], length.out = n_intermediate + 2)
+    g_seq <- seq(col1[2], col2[2], length.out = n_intermediate + 2)
+    b_seq <- seq(col1[3], col2[3], length.out = n_intermediate + 2)
+    
+    # combine and convert to HEX
+    pair_colors <- mapply(function(r,g,b) rgb(r,g,b), r_seq, g_seq, b_seq)
+    
+    result <- c(result, pair_colors)
+  }
+  
+  # avoid duplicating the last color of previous segment
+  unique_preserve_order(result)
+}
+
+# HSL interpolation
+interpolate_hex_hsl <- function(hex_colors, n_intermediate = 3) {
+  result <- c()
+  n <- length(hex_colors)
+
+  
+  for(i in 1:(length(hex_colors))) {
+    col1 <- as(colorspace::hex2RGB(hex_colors[i]), "HLS")@coords
+    col2 <- as(colorspace::hex2RGB(hex_colors[(i %% n) + 1]), "HLS")@coords  # wrap around
+    
+    # create sequence for each H, L, S
+    h_seq <- seq(col1[1], col2[1], length.out = n_intermediate + 2)
+    l_seq <- seq(col1[2], col2[2], length.out = n_intermediate + 2)
+    s_seq <- seq(col1[3], col2[3], length.out = n_intermediate + 2)
+    
+    # combine and convert to HEX
+    pair_colors <- mapply(function(h,l,s) {
+      colorspace::hex(colorspace::HLS(h,l,s))
+    }, h_seq, l_seq, s_seq)
+    
+
+    result <- c(result, pair_colors)
+  }
+  
+  # avoid duplicating the last color of previous segment
+  unique_preserve_order(result)
+}
+
+ #pie chart helper function
+create_pie_chart <- function(colors, title, side_bar = TRUE) {
+  colors_unique <- colors[!duplicated(colors)]  # remove duplicates for factor
+  
+  pie_df <- data.frame(
+    value = rep(1, length(colors)),
+    color = colors,
+    label = NA
+    )
+  
+  # Label only original colors
+  original_positions <- seq(1, length(colors), by = n_intermediate + 1)
+  pie_df$label[original_positions] <- colors[original_positions]
+  
+  # Preserve order and remove duplicates
+  pie_df$color <- factor(pie_df$color, levels = colors_unique)
+  
+ pie_chart <-  ggplot(pie_df, aes(x = "", y = value, fill = color)) +
+    geom_bar(stat = "identity", width = 1, color = NA) +
+    coord_polar(theta = "y") +
+    scale_fill_manual(values = colors_unique) +
+    geom_text(aes(label = label), position = position_stack(vjust = 0.5), size = 3) +
+    theme_void() +
+    ggtitle(title)
+
+  if (side_bar == FALSE){
+      pie_chart +   theme(legend.position = "none")
+  } else (
+      pie_chart
+  )
+  }
+```
+
+
+```{r}
+original_colors <- c("#266EC2", "#38475C", "#94CC17")
+n_intermediate <- 20
+
+rgb_colors <- interpolate_hex_rgb(original_colors, n_intermediate)
+hsl_colors <- interpolate_hex_hsl(original_colors, n_intermediate)
+
+# -----------------------------
+# Create pie charts
+p_rgb <- create_pie_chart(rgb_colors, "RGB Interpolated Colors")
+p_hsl <- create_pie_chart(hsl_colors, "HSL Interpolated Colors", FALSE)
+
+# Combine side by side
+p_rgb
+p_hsl
+```
+
+
